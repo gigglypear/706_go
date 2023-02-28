@@ -207,7 +207,7 @@ nhanes.all = yes_no_encoder(nhanes.all, categoricals)
 
 
 ```{r}
-nhanes.all %>% mutate(
+nhanes.final = nhanes.all %>% mutate(
   Gender = case_when(
     Gender == 1 ~ "Male",
     Gender == 2 ~ "Female"
@@ -224,49 +224,37 @@ nhanes.all %>% mutate(
     Family_Income %in% c(7, 8) ~ "35000-55000",
     Family_Income %in% c(9, 10) ~ "55000-75000",
     Family_Income == 14 ~ "75000-100000",
-    Family_Income == 15 ~ ">100000"
+    Family_Income == 15 ~ ">100000",
     TRUE ~ NA_character_
-  ), Age
-)
-```
-
-
-
-```{r}
-## RIDRETH3 race 5 & 7 = Other Race - Including Multi-Racial 
-
-names.2009 = update_dt_names("F")
-
-demo.2009 = query_table("DEMO", 2009)
-nhanes.2009 = select_col_DEMO(demo.2009, 2009, names.2009[["demo"]])
-
-exam.2009 = query_table("EXAM", 2009)
-nhanes.2009 = merge(nhanes.2009, select_col_EXAM(exam.2009, names.2009[["exam"]]), by = "SEQN",all = TRUE)
-
-lab.2009 = query_table("LAB", 2009)
-nhanes.2009 = merge(nhanes.2009, select_col_LAB(lab.2009, names.2009[["lab"]]), by = "SEQN",all = TRUE)
-
-q.2009 = query_table("Q", 2009)
-nhanes.2009 = merge(nhanes.2009, select_col_Q(q.2009, 2009, names.2009[["q"]]), by = "SEQN",all = TRUE)
-```
-
-```{r}
-nhanes.2017 
-```
-
-
-
-```{r}
-names.2009
-
+  ), Age_Group = case_when(
+    Age < 18 ~ "<18",
+    Age > 19 & Age <= 25 ~ "19-25",
+    Age > 26 & Age <= 35 ~ "26-35",
+    Age > 36 & Age <= 45 ~ "36-45",
+    Age > 46 & Age <= 55 ~ "46-55",
+    Age > 56 & Age <= 65 ~ "56-65",
+    Age > 65 ~ ">65",
+    TRUE ~ NA_character_
+  ), BMI_Group = case_when(
+    BMI < 18.5 ~ "underweight",
+    BMI >= 18.5 & BMI < 25 ~ "normal",
+    BMI >=25 & BMI < 30 ~ "overweight",
+    BMI >=30 ~ "obese",
+    TRUE ~ NA_character_
+  ) 
+) %>% filter(!is.na(Diabetes))
 ```
 
 
 ```{r}
-q2017names  <- nhanesTables('Q', 2009, namesonly=TRUE)
-q2017tables <- lapply(q2017names, nhanes)
-names(q2017tables) <- q2017names
-q2017tables$DIQ_J
+summary(nhanes.final)
 ```
 
+```{r}
+write.csv(nhanes.final, "data/nhanes_filtered.csv", row.names = F)
+```
+
+```{r}
+read.csv("data/nhanes_filtered.csv")
+```
 
